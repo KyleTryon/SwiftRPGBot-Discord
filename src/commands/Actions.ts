@@ -171,6 +171,10 @@ export class Actions {
     command.reply(`${command.user} converted level ${level} to XP!`);
   }
 
+  @Slash({description: "login", name: "login"})
+  login(command: CommandInteraction): void {
+    command.reply(`${command.user} logged in!`);
+  } 
 
 }
 
