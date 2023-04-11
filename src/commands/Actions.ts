@@ -165,7 +165,7 @@ export class Actions {
     command.reply(`${command.user} converted ${xp} XP to level!`);
   }
 
-  @Slash({ description: "Convert level to XP", name: "level" })
+  @Slash({ description: "Convert level to XP", name: "experience" })
   experience(
     @SlashOption({
       description: "The level to convert",
