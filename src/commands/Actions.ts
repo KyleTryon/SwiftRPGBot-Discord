@@ -2,6 +2,8 @@ import type { CommandInteraction } from "discord.js";
 import { SlashGroup, SlashOption } from "discordx";
 import { Discord, Slash } from "discordx";
 import { ApplicationCommandOptionType } from "discord.js";
+import { SwiftClient, SwiftRPGActionErrorResponse, SwiftRPGActionResponse } from "../lib/SwiftClient.js";
+import { generateActionMessage } from "../lib/Utils.js";
 
 @Discord()
 @SlashGroup({ description: "Explore the map", name: "explore" })
@@ -9,8 +11,14 @@ import { ApplicationCommandOptionType } from "discord.js";
 @SlashGroup({ description: "Embark on a journey", name: "quest" })
 export class Actions {
   @Slash({ description: "chop tree", name: "chop" })
-  chop(command: CommandInteraction): void {
-    command.reply(`${command.user} chopped a tree!`);
+  async chop(command: CommandInteraction): Promise<void> {
+    const response = await new SwiftClient(process.env.TEST_AUTH as string).chop();
+    if (response.status === 200) {
+      const data = response.data as SwiftRPGActionResponse;
+      command.reply(generateActionMessage("🪓 Chopped a tree", data));
+    } else {
+      command.reply(`Error: ${(response.data as SwiftRPGActionErrorResponse).error}`);
+    }
   }
 
   @SlashGroup("explore")
@@ -177,6 +185,3 @@ export class Actions {
   } 
 
 }
-
-@Discord()
-export class Explore {}
