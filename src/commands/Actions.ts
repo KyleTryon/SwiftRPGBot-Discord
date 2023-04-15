@@ -11,11 +11,14 @@ import { Discord, Slash } from "discordx";
 import { ApplicationCommandOptionType } from "discord.js";
 import {
   SwiftClient,
-  SwiftRPGActionErrorResponse,
   SwiftRPGActionResponse,
-  SwiftRPGActionResponseLookPeople,
+  SwiftRPGActionResponseMetaExplore,
+  SwiftRPGActionResponseMetaLookPeople,
 } from "../lib/SwiftClient.js";
-import { generateActionMessage } from "../lib/Utils.js";
+import {
+  generateActionMessage,
+  generateActionMessageError,
+} from "../lib/Utils.js";
 import { PrismaClient, User } from "@prisma/client";
 
 const getAuthedClient = async (discordId: string) => {
@@ -38,24 +41,21 @@ export class Actions {
   @Slash({ description: "chop tree", name: "chop" })
   async chop(command: CommandInteraction): Promise<void> {
     try {
-      const response = await(await getAuthedClient(command.user.id)).chop();
-      const data = response.data as SwiftRPGActionResponse<unknown>;
+      // Get authenticated client
+      const client = await getAuthedClient(command.user.id);
+      // Execute chop action
+      const response = await client.chop();
+      // Extract data from the response
+      const data = response.data;
+      // Check for errors and reply accordingly
       if (data.error) {
-        command.reply(data.error);
-        return;
+        command.reply(generateActionMessageError(data.error));
       } else {
-        command.reply({
-          embeds: [
-            generateActionMessage<unknown>(
-              "🪓 Chop!",
-              `@${command.user.username} chopped a tree!`,
-              data
-            ),
-          ],
-        });
+        command.reply(generateActionMessage<unknown>("chop", command, data));
       }
     } catch (e) {
-      command.reply("Error: " + (e as Error).message);
+      // Handle errors and reply with an error message
+      command.reply(generateActionMessageError((e as Error).message));
     }
   }
 
@@ -63,13 +63,17 @@ export class Actions {
   @Slash({ description: "east" })
   async east(command: CommandInteraction): Promise<void> {
     try {
-      const response =  await(await getAuthedClient(command.user.id)).explore("east");
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("🚶‍♂️Explore!", `@${command.user.username} explored to the east!`, data)]
-      })
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.explore("east");
+      const data = response.data;
+      if (data.error) {
+        command.reply(generateActionMessageError(data.error));
+      } else {
+        command.reply(generateActionMessage<unknown>("east", command, data));
+      }
     } catch (e) {
-      command.reply("Error: " + (e as Error).message);
+      // Handle errors and reply with an error message
+      command.reply(generateActionMessageError((e as Error).message));
     }
   }
 
@@ -77,13 +81,16 @@ export class Actions {
   @Slash({ description: "south" })
   async south(command: CommandInteraction): Promise<void> {
     try {
-      const response = await(await getAuthedClient(command.user.id)).explore("south");
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("🚶‍♂️Explore!", `@${command.user.username} explored to the south!`, data)]
-      })
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.explore("south");
+      const data = response.data;
+      if (data.error) {
+        command.reply(generateActionMessageError(data.error));
+      } else {
+        command.reply(generateActionMessage<unknown>("south", command, data));
+      }
     } catch (e) {
-      command.reply("Error: " + (e as Error).message);
+      command.reply(generateActionMessageError((e as Error).message));
     }
   }
 
@@ -91,41 +98,43 @@ export class Actions {
   @Slash({ description: "west" })
   async west(command: CommandInteraction): Promise<void> {
     try {
-      const response = await(await getAuthedClient(command.user.id)).explore("west");
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("🚶‍♂️Explore!", `@${command.user.username} explored to the west!`, data)]
-      })
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.explore("west");
+      const data = response.data;
+      command.reply(generateActionMessage<unknown>("west", command, data));
     } catch (e) {
-      command.reply("Error: " + (e as Error).message);
+      command.reply(generateActionMessageError((e as Error).message));
     }
-  
   }
 
   @SlashGroup("explore")
   @Slash({ description: "north" })
   async north(command: CommandInteraction): Promise<void> {
     try {
-      const response = await(await getAuthedClient(command.user.id)).explore("north");
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("🚶‍♂️Explore!", `@${command.user.username} explored to the north!`, data)]
-      })
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.explore("north");
+      const data = response.data;
+      command.reply(generateActionMessage<unknown>("north", command, data));
     } catch (e) {
-      command.reply("Error: " + (e as Error).message);
+      command.reply(generateActionMessageError((e as Error).message));
     }
   }
 
   @Slash({ description: "Pickpocket a citizen", name: "pickpocket" })
   async pickpocket(command: CommandInteraction): Promise<void> {
     try {
-      const response = await(await getAuthedClient(command.user.id)).pickpocket();
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("🕵️ Pickpocket!", `@${command.user.username} pickpocketed a citizen!`, data)]
-      })
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.pickpocket();
+      const data = response.data;
+      if (data.error) {
+        command.reply(generateActionMessageError(data.error));
+      } else {
+        command.reply(
+          generateActionMessage<unknown>("pickpocket", command, data)
+        );
+      }
     } catch (e) {
-      command.reply("Error: " + (e as Error).message);
+      command.reply(generateActionMessageError((e as Error).message));
     }
   }
 
@@ -133,43 +142,56 @@ export class Actions {
   @Slash({ description: "Look around the area" })
   async around(command: CommandInteraction): Promise<void> {
     try {
-      const response = await(await getAuthedClient(command.user.id)).lookAround();
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("👀 Look!", `@${command.user.username} looked around!`, data)]
-      })
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.lookAround();
+      const data = response.data;
+      if (data.error) {
+        command.reply(generateActionMessageError(data.error));
+      } else {
+        command.reply(
+          generateActionMessage<unknown>("lookAround", command, data)
+        );
+      }
     } catch (e) {
-      command.reply("Error: " + (e as Error).message);
+      command.reply(generateActionMessageError((e as Error).message));
+    }
+  }
+
+  @SlashGroup("look")
+  @Slash({ description: "Look in a direction" })
+  async direction(
+    @SlashOption({
+      description: "Direction to look",
+      name: "direction",
+      required: true,
+      type: ApplicationCommandOptionType.String,
+    })
+    direction: string,
+    command: CommandInteraction
+  ): Promise<void> {
+    try {
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.lookDirection(direction);
+      const data = response.data;
+      if (data.error) {
+        command.reply(generateActionMessageError(data.error));
+      } else {
+        command.reply(
+          generateActionMessage<unknown>("lookDirection", command, data)
+        );
+      }
+    } catch (e) {
+      command.reply(generateActionMessageError((e as Error).message));
     }
   }
 
   @SlashGroup("look")
   @Slash({ description: "Inspect the people around you" })
-  async people(command: CommandInteraction): Promise<void> {
-    try {
-      const response = await(await getAuthedClient(command.user.id)).lookPeople();
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("👀 Look!", `@${command.user.username} looked at people!`, data)]
-      })
-    } catch (e) {
-      command.reply("Error: " + (e as Error).message);
-    }
-  }
+  async people(command: CommandInteraction): Promise<void> {}
 
   @SlashGroup("look")
   @Slash({ description: "Inspect the buildings around you" })
-  async buildings(command: CommandInteraction): Promise<void> {
-    try {
-      const response = await(await getAuthedClient(command.user.id)).lookBuildings();
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("👀 Look!", `@${command.user.username} looked at buildings!`, data)]
-      })
-    } catch (e) {
-      command.reply("Error: " + (e as Error).message);
-    }
-  }
+  async buildings(command: CommandInteraction): Promise<void> {}
 
   @SlashGroup("look")
   @Slash({ description: "Inspect an individual" })
@@ -182,17 +204,7 @@ export class Actions {
     })
     person: number,
     command: CommandInteraction
-  ): Promise<void> {
-    try {
-      const response = await(await getAuthedClient(command.user.id)).lookPeople();
-      const data = response.data as SwiftRPGActionResponse<unknown>;
-      command.reply({
-        embeds: [ generateActionMessage<unknown>("👀 Look!", `@${command.user.username} looked at person ${person}!`, data)]
-      })
-    } catch (e) {
-      command.reply("Error: " + (e as Error).message);
-    }
-  }
+  ): Promise<void> {}
 
   @SlashGroup("quest")
   @Slash({ description: "Go on a quest" })
