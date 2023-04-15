@@ -19,6 +19,10 @@ export class SwiftClient {
     return this.client.post("/woodcutting/chop");
   }
 
+  burn(): AxiosPromise<SwiftRPGActionResponse<unknown>> {
+    return this.client.post("/firemaking/burn");
+  }
+
   explore(direction: string): AxiosPromise<SwiftRPGActionResponse<unknown>> {
     return this.client.post(`/map/user/explore`, { direction: direction });
   }

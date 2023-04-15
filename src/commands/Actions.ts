@@ -59,6 +59,22 @@ export class Actions {
     }
   }
 
+  @Slash({ description: "Make a fire", name: "burn" })
+  async burn(command: CommandInteraction): Promise<void> {
+    try {
+      const client = await getAuthedClient(command.user.id);
+      const response = await client.burn();
+      const data = response.data;
+      if (data.error) {
+        command.reply(generateActionMessageError(data.error));
+      } else {
+        command.reply(generateActionMessage<unknown>("burn", command, data));
+      }
+    } catch (e) {
+      command.reply(generateActionMessageError((e as Error).message));
+    }
+  }
+
   @SlashGroup("explore")
   @Slash({ description: "east" })
   async east(command: CommandInteraction): Promise<void> {

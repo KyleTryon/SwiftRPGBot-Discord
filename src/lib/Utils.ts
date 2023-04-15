@@ -23,20 +23,29 @@ export const generateActionMessage = <T>(
 
   if (data.reward.loot.length > 0) {
     data.reward.loot.forEach((item) => {
+      const isPositive = Math.sign(item.quantity) === 1;
       embed.addFields({
         name: `${item.name || "none"}`,
-        value: `${item.total || 0} [**+**${item.quantity || 0}]`,
+        value: `${item.total || 0} [**${isPositive ? '+' : ''}${item.quantity || 0}**]`,
       });
     });
   }
 
   switch (command) {
-    case "chop":
+    case "chop": {
       embed.setTitle("🪓 Chop!");
       embed.setDescription(
         `@${interaction.user.username} begins chopping a tree.`
       );
       break;
+    }
+    case "burn": {
+      embed.setTitle("🔥 Burn!");
+      embed.setDescription(
+        `@${interaction.user.username} begins burning a log, making a warm fire.`
+      );
+      break;
+    }
     case "north": {
       const typedData =
         data as SwiftRPGActionResponse<SwiftRPGActionResponseMetaExplore>;
@@ -154,7 +163,6 @@ export const generateActionMessage = <T>(
       });
       break;
     }
-    
   }
 
   return { embeds: [embed] };
